@@ -13,9 +13,9 @@ if TYPE_CHECKING:
 
 logger.remove()
 
-LOGGER_FORMAT_STR: Final[str] = (
-    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line} [Process ID {extra[id]}]</cyan> - <level>{message}</level>"
-)
+LOGGER_FORMAT_STR: Final[
+    str
+] = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line} [Process ID {extra[id]}]</cyan> - <level>{message}</level>"
 
 logger.add(
     sys.stderr,

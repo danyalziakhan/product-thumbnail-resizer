@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
 import os
 import shutil
+import sys
 
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
+from datetime import datetime
 from pathlib import Path
-import sys
 from threading import Lock
 from time import sleep
 from typing import TYPE_CHECKING
@@ -26,6 +26,7 @@ from tqdm import tqdm
 
 from product_thumbnail_resizer.log import logger
 from product_thumbnail_resizer.settings import Settings
+
 
 if TYPE_CHECKING:
     from typing import Any, Final
@@ -208,7 +209,7 @@ def get_url(model_name: str, brand_name: str):
 def run(settings: Settings) -> None:
     logger.log("ACTION", f"Reading: {settings.input_file} ...")
 
-    dataframe = read_data_file(
+    dataframe = parse_excel_sheet(
         settings.input_file, settings.sheet_name, settings.model_name_column
     )
 
@@ -359,15 +360,46 @@ def resize(
     return save_path
 
 
-def read_data_file(
+def parse_excel_sheet(
     input_file: str, sheet_name: str, model_name_column: str
 ) -> pd.DataFrame:
-    return (
-        pd.read_excel(
-            os.path.join(SCRIPT_PATH, input_file),
-            sheet_name=sheet_name,
-            engine="openpyxl",
+    """
+    Reads an Excel file into a pandas DataFrame.
+
+    Args:
+        input_file (str): The path to the Excel file.
+        sheet_name (str): The name of the sheet in the Excel file.
+        model_name_column (str): The column containing model names.
+
+    Returns:
+        pd.DataFrame: A pandas DataFrame containing the data from the specified sheet.
+
+    Raises:
+        FileNotFoundError: If the input file does not exist.
+        ValueError: If the sheet name is invalid or if the model_name_column contains non-model-related data.
+        Exception: Any other errors that may occur while processing the data file.
+    """
+    try:
+        # Try to read the Excel file
+        excel_file = pd.ExcelFile(
+            os.path.join(SCRIPT_PATH, input_file), engine="openpyxl"
         )
-        .dropna(how="all")
-        .dropna(how="any", subset=[model_name_column])
-    )
+
+        if not excel_file.sheet_names or sheet_name not in excel_file.sheet_names:
+            raise ValueError(
+                f"The sheet '{sheet_name}' does not exist in the Excel file."
+            )
+
+        # Read the specified sheet
+        df = excel_file.parse(sheet_name)
+    except FileNotFoundError as e:
+        logger.error(f"The input file '{input_file}' was not found. {e}")
+        raise
+
+    try:
+        df.dropna(how="all").dropna(how="any", subset=[model_name_column])
+    except Exception as e:
+        logger.error(f"An error occurred while processing the data file. {e}")
+        raise
+
+    return df

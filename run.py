@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-from argparse import ArgumentParser
 import os
 import shutil
 
+from argparse import ArgumentParser
 from contextlib import suppress
 from multiprocessing import freeze_support
 
+from product_thumbnail_resizer.log import logger
 from product_thumbnail_resizer.main import (
-    run,
     DOWNLOAD_IMAGES_DIR,
     RESIZED_IMAGES_DIR,
     TODAY_DATE,
+    run,
 )
 from product_thumbnail_resizer.settings import Settings
-from product_thumbnail_resizer.log import logger
 
 
 if __name__ == "__main__":
